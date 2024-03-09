@@ -1,6 +1,7 @@
 package com.example.newsapplication.presentation.screens.news
 
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -22,11 +23,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import coil.compose.AsyncImage
 import com.example.newsapplication.domain.models.NewUI
 
 
@@ -38,7 +42,7 @@ fun NewsScreen() {
     LaunchedEffect(viewModel) {
         viewModel.loadNews()
     }
-
+    val uriHandler = LocalUriHandler.current
     LazyColumn(
         modifier = Modifier
             .fillMaxWidth()
@@ -47,7 +51,7 @@ fun NewsScreen() {
         verticalArrangement = Arrangement.spacedBy(15.dp)
     ) {
         items(state.news) {
-            NewItem(newUI = it)
+            NewItem(newUI = it) { uriHandler.openUri(it.url.orEmpty()) }
         }
 
     }
@@ -56,9 +60,11 @@ fun NewsScreen() {
 }
 
 @Composable
-fun NewItem(newUI: NewUI) {
+fun NewItem(newUI: NewUI, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         colors = CardDefaults.cardColors(containerColor = Color.White)
     ) {
         Row(
@@ -66,15 +72,28 @@ fun NewItem(newUI: NewUI) {
                 .fillMaxWidth()
                 .padding(5.dp), verticalAlignment = Alignment.CenterVertically
         ) {
+            if (newUI.urlToImage.isBlank()) {
+                Box(
+                    modifier = Modifier
+                        .size(45.dp)
+                        .border(width = 1.dp, color = Color.Gray, shape = CircleShape)
+                        .clip(
+                            CircleShape
+                        )
+                )
+            } else {
+                AsyncImage(
+                    model = newUI.urlToImage,
+                    contentDescription = "",
+                    modifier = Modifier
+                        .size(45.dp)
+                        .clip(
+                            CircleShape
+                        ),
+                    contentScale = ContentScale.Crop
+                )
+            }
 
-            Box(
-                modifier = Modifier
-                    .size(45.dp)
-                    .border(width = 1.dp, color = Color.Gray, shape = CircleShape)
-                    .clip(
-                        CircleShape
-                    )
-            )
 
             Column(modifier = Modifier.padding(start = 10.dp)) {
                 Text(
